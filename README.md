@@ -154,6 +154,6 @@ sys.path.insert(0, "/Workspace/healthrisk")
 ## Limitations & Future Work
 
 - Dengue labels are at province/national level; finer spatial resolution would improve grid-level precision
-- Climate data covers 2017–2026; dengue labels available through 2024 (OpenDengue V1.3 release lag)
+- Climate data covers 2017–2026; dengue labels available through 2025 (OpenDengue V1.3 release lag)
 - NDVI and land-use covariates not included in current feature set
 - Expanding to South America (Brazil, Colombia) would substantially increase training data volume
