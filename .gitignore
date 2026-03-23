@@ -1,0 +1,11 @@
+# Data files
+*.csv
+*.parquet
+*.delta
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
