@@ -4,22 +4,40 @@ NASA_POINT_URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
 
 PARAMETERS = "T2M,PRECTOTCORR,RH2M"
 START_DATE = "20170101"
-END_DATE = "20260228"
+END_DATE = "20241231"
 
 GRID_STEP = 1.0
-LON_MIN = 100
-LON_MAX = 125
-LAT_MIN = -8
-LAT_MAX = 20
 
 TILE_LON_SIZE = 5
 TILE_LAT_SIZE = 5
 MAX_CONCURRENCY = 10
-REQUEST_TIMEOUT = 60
-MAX_RETRIES = 4
-RETRY_BACKOFF_BASE = 2
+REQUEST_TIMEOUT = 180
+MAX_RETRIES = 5
+RETRY_BACKOFF_BASE = 3
 
 BRONZE_TABLE = "bronze.nasa_weather"
+
+# ── Multi-region bounding boxes ──────────────────
+REGIONS = {
+    "SEA": {
+        "lon_min": 100,
+        "lon_max": 125,
+        "lat_min": -8,
+        "lat_max": 20,
+    },
+    "SOUTH_AMERICA": {
+        "lon_min": -82,
+        "lon_max": -34,
+        "lat_min": -56,
+        "lat_max":  13,
+    },
+}
+
+# Legacy single-region aliases (kept so existing code doesn't break)
+LON_MIN = REGIONS["SEA"]["lon_min"]
+LON_MAX = REGIONS["SEA"]["lon_max"]
+LAT_MIN = REGIONS["SEA"]["lat_min"]
+LAT_MAX = REGIONS["SEA"]["lat_max"]
 
 # ── Feature Engineering ──────────────────────────
 

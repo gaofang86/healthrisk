@@ -11,9 +11,13 @@ def build_silver_climate(spark: SparkSession):
     spark.table(BRONZE_TABLE)
     .filter("status = 'SUCCESS'")
     .withColumn("date_parsed", F.to_date(F.col("date"), DATE_FORMAT))
-    .withColumn("month_num", F.month("date_parsed"))   
-    )
-
+    .withColumn("month_num", F.month("date_parsed"))
+    .withColumn("grid_id", F.concat(
+        F.col("longitude").cast("string"),
+        F.lit("_"),
+        F.col("latitude").cast("string")
+    ))
+)
     df_silver = (
         df.groupBy(
             "grid_id", "longitude", "latitude",

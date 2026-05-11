@@ -1,0 +1,23 @@
+[
+  {
+    "id": "GLB001", "country": "GLOBAL", "region": "global",
+    "type": "surveillance", "name": "WHO dengue global situation report",
+    "description": "WHO 2024 global update: 14.4 million cases, 11,201 deaths across 6 regions. Americas account for 90% of global cases.",
+    "contact": "who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue",
+    "tags": "WHO global dengue surveillance situation report 2024 deaths cases worldwide"
+  },
+  {
+    "id": "GLB002", "country": "GLOBAL", "region": "global",
+    "type": "program", "name": "World Mosquito Program — Wolbachia global",
+    "description": "Operating in 14 countries. Wolbachia method reduces dengue incidence by 70-77%. Active in Indonesia, Brazil, Colombia, Vietnam, Australia.",
+    "contact": "worldmosquitoprogram.org",
+    "tags": "wolbachia global prevention dengue reduction 77% program Indonesia Brazil Colombia Vietnam"
+  },
+  {
+    "id": "GLB003", "country": "GLOBAL", "region": "global",
+    "type": "guidance", "name": "WHO dengue clinical management guidelines",
+    "description": "Official clinical management protocol for dengue and severe dengue. IV therapy keeps mortality below 1% when applied early.",
+    "contact": "who.int/publications/i/item/9789241504713",
+    "tags": "WHO clinical management dengue severe guidelines IV therapy mortality treatment protocol"
+  }
+]

@@ -1,0 +1,107 @@
+[
+  {
+    "id": "SAM001", "country": "PERU", "region": "south_america",
+    "type": "clinic", "name": "Centro de Salud MINSA",
+    "description": "Free dengue testing and treatment. MINSA declared health emergency in 20 of 25 regions in Feb 2024. 113,692 confirmed cases nationally by March 2024.",
+    "contact": "Visit nearest Centro de Salud — free for all",
+    "tags": "dengue clinic free peru minsa testing treatment emergency 2024 health center"
+  },
+  {
+    "id": "SAM002", "country": "PERU", "region": "south_america",
+    "type": "clinic", "name": "EsSalud regional hospital",
+    "description": "For insured patients with dengue complications requiring IV therapy or hospitalization.",
+    "contact": "EsSalud nearest regional — SIS/EsSalud card required",
+    "tags": "dengue hospital peru essalud insured severe IV therapy complications hospitalization"
+  },
+  {
+    "id": "SAM003", "country": "PERU", "region": "south_america",
+    "type": "hotline", "name": "MINSA health hotline",
+    "description": "Call for dengue symptoms guidance, nearest facility, and outbreak reporting. Active during declared health emergencies.",
+    "contact": "113",
+    "tags": "hotline peru minsa dengue 113 symptoms guidance emergency reporting"
+  },
+  {
+    "id": "SAM004", "country": "PERU", "region": "south_america",
+    "type": "hotline", "name": "SIS insurance assistance",
+    "description": "Integral Health Insurance for low-income patients. Covers dengue hospitalization and treatment costs.",
+    "contact": "117",
+    "tags": "SIS insurance peru 117 low income dengue hospitalization coverage free"
+  },
+  {
+    "id": "SAM005", "country": "PERU", "region": "south_america",
+    "type": "ngo", "name": "Cruz Roja Peruana",
+    "description": "Emergency food parcels and health kits during outbreak response. Active in Lima, Piura, La Libertad — highest burden regions in 2024 outbreak.",
+    "contact": "cruzroja.org.pe | Local Cruz Roja branch",
+    "tags": "red cross ngo peru food emergency outbreak Lima Piura La Libertad health kit response"
+  },
+  {
+    "id": "SAM006", "country": "PERU", "region": "south_america",
+    "type": "ngo", "name": "UNICEF Peru — vector-borne disease kits",
+    "description": "During declared outbreaks UNICEF pre-positions hygiene and vector-borne disease kits. Active in Lima, Ucayali, Loreto, Huancavelica, Tumbes. 10,000 kits available.",
+    "contact": "unicef.org/peru | Via local COER emergency office",
+    "tags": "unicef peru ngo dengue kit hygiene distribution outbreak Lima Loreto Ucayali 10000"
+  },
+  {
+    "id": "SAM007", "country": "PERU", "region": "south_america",
+    "type": "food", "name": "MIDIS Qali Warma",
+    "description": "Community feeding program for vulnerable households. Children and adolescents were 29.6% of all dengue cases in 2024 — program prioritizes this group during health emergencies.",
+    "contact": "midis.gob.pe | Local MIDIS office",
+    "tags": "food peru community feeding MIDIS vulnerable children government dengue recovery 2024"
+  },
+  {
+    "id": "SAM008", "country": "PERU", "region": "south_america",
+    "type": "surveillance", "name": "CDC Peru epidemiological bulletins",
+    "description": "Weekly dengue bulletins by region from Peru's national epidemiology center. Check your region's current risk level.",
+    "contact": "dge.gob.pe/portalnuevo/publicaciones/boletines-epidemiologicos/",
+    "tags": "CDC peru bulletin dengue surveillance weekly region risk level epidemiology monitor"
+  },
+  {
+    "id": "SAM009", "country": "BRAZIL", "region": "south_america",
+    "type": "clinic", "name": "UBS — Unidade Básica de Saúde (SUS)",
+    "description": "Free public health units under Brazil's SUS system. Front line for dengue triage. Brazil reported 10 million cases in 2024 — the largest dengue epidemic in history.",
+    "contact": "Visit nearest UBS — free for all via SUS",
+    "tags": "dengue clinic free brazil SUS UBS triage treatment public health 2024 record"
+  },
+  {
+    "id": "SAM010", "country": "BRAZIL", "region": "south_america",
+    "type": "hotline", "name": "Disque Saúde — national health hotline",
+    "description": "24-hour free health guidance hotline. Reports dengue symptoms, directs to nearest UBS or hospital.",
+    "contact": "136",
+    "tags": "hotline brazil dengue 136 disque saude free 24hour symptoms guidance SUS"
+  },
+  {
+    "id": "SAM011", "country": "BRAZIL", "region": "south_america",
+    "type": "program", "name": "COE Arboviroses — Emergency Operations Center",
+    "description": "Created by Brazilian Ministry of Health in Feb 2024 to coordinate national dengue response across states and municipalities.",
+    "contact": "gov.br/saude/pt-br/assuntos/saude-de-a-a-z/a/aedes-aegypti/monitoramento-das-arboviroses",
+    "tags": "brazil COE emergency operations dengue arboviroses coordination ministry 2024 response"
+  },
+  {
+    "id": "SAM012", "country": "BRAZIL", "region": "south_america",
+    "type": "vaccine", "name": "QDENGA vaccine — public SUS program",
+    "description": "Brazil first country to offer Qdenga via public health system in 2024. 6 million doses for children aged 10-14. 80% efficacy one year after second dose.",
+    "contact": "Via UBS — inquire at nearest unit",
+    "tags": "vaccine dengue QDENGA brazil SUS children 10-14 public free 80% efficacy 2024"
+  },
+  {
+    "id": "SAM013", "country": "BRAZIL", "region": "south_america",
+    "type": "ngo", "name": "Cruz Vermelha Brasileira",
+    "description": "Emergency response during outbreaks including field hospitals support, health kits, and community education.",
+    "contact": "cvb.org.br | Local Cruz Vermelha branch",
+    "tags": "red cross brazil ngo emergency dengue response health kit community education"
+  },
+  {
+    "id": "SAM014", "country": "BRAZIL", "region": "south_america",
+    "type": "food", "name": "CRAS — Centro de Referência de Assistência Social",
+    "description": "Social assistance centers providing food and support for vulnerable families during health crises. Present in all municipalities.",
+    "contact": "Visit nearest CRAS — free service",
+    "tags": "food brazil CRAS social assistance vulnerable family dengue recovery municipality free"
+  },
+  {
+    "id": "SAM015", "country": "SOUTH_AMERICA", "region": "south_america",
+    "type": "surveillance", "name": "PAHO dengue regional dashboard",
+    "description": "Pan American Health Organization real-time dengue tracker for all Americas countries. 2024: 11.7 million cases across 47 countries — highest ever recorded.",
+    "contact": "paho.org/en/topics/dengue",
+    "tags": "PAHO Americas dengue surveillance dashboard regional south america real-time 2024 tracker"
+  }
+]

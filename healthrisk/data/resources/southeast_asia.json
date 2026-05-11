@@ -1,0 +1,58 @@
+[
+  {
+    "id": "SEA001", "country": "INDONESIA", "region": "southeast_asia",
+    "type": "clinic", "name": "Puskesmas community health center",
+    "description": "Free dengue testing and treatment. 10,000+ Puskesmas nationwide. First point of care for suspected dengue — no appointment needed.",
+    "contact": "Visit nearest Puskesmas",
+    "tags": "dengue clinic free treatment indonesia puskesmas testing fever walk-in"
+  },
+  {
+    "id": "SEA002", "country": "INDONESIA", "region": "southeast_asia",
+    "type": "clinic", "name": "RSUD district hospital dengue ward",
+    "description": "Public district hospitals with dengue wards for severe cases. Subsidized via BPJS health insurance for low-income patients.",
+    "contact": "RSUD nearest district — bring BPJS card if available",
+    "tags": "dengue hospital severe indonesia BPJS public subsidized ward hemorrhagic"
+  },
+  {
+    "id": "SEA003", "country": "INDONESIA", "region": "southeast_asia",
+    "type": "hotline", "name": "National health emergency hotline",
+    "description": "24-hour hotline for health emergencies. Directs to nearest facility and can trigger district response.",
+    "contact": "119 ext 8",
+    "tags": "emergency hotline indonesia dengue 119 24hour urgent call"
+  },
+  {
+    "id": "SEA004", "country": "INDONESIA", "region": "southeast_asia",
+    "type": "ngo", "name": "PMI Indonesian Red Cross — CP3 program",
+    "description": "Community volunteers trained in early dengue detection and referral. Active in Pandeglang, Surakarta, and other endemic districts. Provides free ORS kits. Funded by USAID.",
+    "contact": "pmi.or.id | Local PMI branch",
+    "tags": "red cross PMI ngo free ORS rehydration volunteer community surveillance early detection USAID"
+  },
+  {
+    "id": "SEA005", "country": "INDONESIA", "region": "southeast_asia",
+    "type": "program", "name": "World Mosquito Program — Wolbachia Indonesia",
+    "description": "Active in Yogyakarta, Sleman, Bantul, Denpasar, Buleleng. Wolbachia mosquitoes reduced dengue incidence by 77% in treated areas. Government target: zero dengue deaths by 2030.",
+    "contact": "worldmosquitoprogram.org/en/global-progress/indonesia",
+    "tags": "wolbachia prevention indonesia yogyakarta bali dengue 77% reduction program community"
+  },
+  {
+    "id": "SEA006", "country": "INDONESIA", "region": "southeast_asia",
+    "type": "program", "name": "3M-Plus Program — Ministry of Health",
+    "description": "Drain water containers, cover water storage, recycle items collecting water. Plus: repellent, long clothes, bed nets. Government-endorsed household prevention.",
+    "contact": "kemkes.go.id",
+    "tags": "3M program prevention indonesia government household drain cover recycle repellent nets"
+  },
+  {
+    "id": "SEA007", "country": "INDONESIA", "region": "southeast_asia",
+    "type": "vaccine", "name": "QDENGA dengue vaccine — school program",
+    "description": "Indonesia rolling out Takeda QDENGA vaccine in schools targeting children. Government goal: reduce severe dengue cases nationally.",
+    "contact": "Inquire at nearest Puskesmas",
+    "tags": "vaccine dengue QDENGA indonesia children school prevention Takeda"
+  },
+  {
+    "id": "SEA008", "country": "INDONESIA", "region": "southeast_asia",
+    "type": "food", "name": "BPNT food assistance program",
+    "description": "Government food assistance for low-income households during extended illness. Register via Kelurahan (sub-district office) with KTP and KK documents.",
+    "contact": "Kelurahan office",
+    "tags": "food assistance indonesia BPNT low income government recovery illness vulnerable"
+  }
+]

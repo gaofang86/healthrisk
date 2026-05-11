@@ -6,13 +6,13 @@
 import pandas as pd 
 import asyncio
 import aiohttp
-from datetime import datetime, UTC
+from datetime import datetime, timezone
+UTC = timezone.utc
 from config import *
 
 # =========================
 # GLOBAL SEMAPHORE（限流）
 # =========================
-semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 retry_count = 0
 fail_count = 0
 # =========================
@@ -83,46 +83,47 @@ async def fetch_point(session, lon, lat):
         "format": "JSON"
     }
 
-    async with semaphore:
-        for attempt in range(1, MAX_RETRIES + 1):
-            try:
-                async with session.get(NASA_POINT_URL, params=params, timeout=REQUEST_TIMEOUT) as resp:
+    
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            async with session.get(NASA_POINT_URL, params=params, timeout=REQUEST_TIMEOUT) as resp:
 
-                    if resp.status == 200:
-                        data = await resp.json()
-                        return {"lon": lon, "lat": lat, "data": data, "error": None}
+                if resp.status == 200:
+                    data = await resp.json()
+                    return {"lon": lon, "lat": lat, "data": data, "error": None}
 
-                    if resp.status in [429, 500, 502, 503, 504]:
-                        retry_count += 1
+                if resp.status in [429, 500, 502, 503, 504]:
+                    retry_count += 1
 
-                        wait = RETRY_BACKOFF_BASE ** (attempt - 1)
-                        await asyncio.sleep(wait)
-                        continue
+                    wait = RETRY_BACKOFF_BASE ** (attempt - 1)
+                    await asyncio.sleep(wait)
+                    continue
 
-                    text = await resp.text()
-                    return {
-                        "lon": lon,
-                        "lat": lat,
-                        "data": None,
-                        "error": f"HTTP {resp.status}: {text[:200]}"
-                    }
+                text = await resp.text()
+                return {
+                    "lon": lon,
+                    "lat": lat,
+                    "data": None,
+                    "error": f"HTTP {resp.status}: {text[:200]}"
+                }
 
-            except Exception as e:
-                retry_count += 1
-                wait = RETRY_BACKOFF_BASE ** (attempt - 1)
-                await asyncio.sleep(wait)
+        except Exception as e:
+            retry_count += 1
+            wait = RETRY_BACKOFF_BASE ** (attempt - 1)
+            await asyncio.sleep(wait)
 
-        retry_count += 1
+    retry_count += 1
 
-        return {
-            "lon": lon,
-            "lat": lat,
-            "data": None,
-            "error": "max retries exceeded"
-        }
+    return {
+        "lon": lon,
+        "lat": lat,
+        "data": None,
+        "error": "max retries exceeded"
+    }
 
 
 async def fetch_tile_points(tile_points):
+    semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
     connector = aiohttp.TCPConnector(limit=MAX_CONCURRENCY)
 
     async with aiohttp.ClientSession(connector=connector) as session:
@@ -217,9 +218,24 @@ async def process_one_tile(tile, tile_idx):
 # 6. MAIN PIPELINE
 # =========================
 async def run_all_tiles(tiles):
-    tasks = [
-        process_one_tile(tile, tile_id)
-        for tile_id, tile in tiles
-    ]
+    semaphore = asyncio.Semaphore(8)
+    total = len(tiles)
+    done_count = 0
 
-    return await asyncio.gather(*tasks)
+    async def limited_task(tile_id, tile):
+        nonlocal done_count
+        async with semaphore:
+            res = await process_one_tile(tile, tile_id)
+            done_count += 1
+            print(f"[DONE {done_count}/{total}] {res['tile_id']}")
+            return res
+
+    print(f"[START] Running {total} tiles with concurrency=10")
+    tasks = [limited_task(tile_id, tile) for tile_id, tile in tiles]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    for r in results:
+        if isinstance(r, Exception):
+            print(f"[ERROR] {r}")
+    
+    return [r for r in results if not isinstance(r, Exception)]
