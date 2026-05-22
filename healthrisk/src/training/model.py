@@ -77,6 +77,9 @@ class TrainingSplits:
     y_test:  np.ndarray
     val_df:  pd.DataFrame    # keep raw cols for NB baseline (cases_roll28)
     test_df: pd.DataFrame
+    y_train_counts: np.ndarray  # add：dengue_total for NB fit
+    y_val_counts:   np.ndarray  # add：dengue_total for NB refit on test
+
 
 
 @dataclass
@@ -151,7 +154,9 @@ def load_and_split(spark) -> tuple[pd.DataFrame, TrainingSplits]:
     print(f"Test  : {len(test_df):,}  rows | outbreak rate {y_test.mean()*100:.1f}%")
 
     splits = TrainingSplits(X_train, y_train, X_val, y_val,
-                            X_test, y_test, val_df, test_df)
+                            X_test, y_test, val_df, test_df,
+                            y_train_counts = train_df["dengue_total"].clip(0).values,  # add
+                            y_val_counts   = val_df["dengue_total"].clip(0).values,)
     return df, splits
 
 
@@ -214,26 +219,31 @@ def validate(model: lgb.LGBMClassifier,
     # ── LightGBM ──────────────────────────────────────────────
     val_proba_cal = calibrator.predict_proba(
     model.predict_proba(splits.X_val)[:, 1].reshape(-1, 1)
-)[:, 1]
+    )[:, 1]
     val_pred      = (val_proba_cal >= threshold).astype(int)
     lgbm_metrics  = _metrics(splits.y_val, val_pred, val_proba_cal, prefix="val_")
 
     # ── NB baseline ───────────────────────────────────────────
     nb = PoissonRegressor(alpha=1.0, max_iter=300)
-    y_counts = splits.val_df["dengue_total"].values.clip(0)
-    nb.fit(splits.X_val, y_counts)
+    nb.fit(splits.X_train, splits.y_train_counts)
 
-    pred_counts   = nb.predict(splits.X_val)
-    roll_baseline = splits.val_df["cases_roll28"].values.clip(1)
-    nb_proba      = np.clip(pred_counts / (roll_baseline * 1.5), 0, 1)
-    nb_thresh, _  = _find_f2_threshold(splits.y_val, nb_proba)
-    nb_pred       = (nb_proba >= nb_thresh).astype(int)
-    nb_metrics    = _metrics(splits.y_val, nb_pred, nb_proba, prefix="val_")
-    nb_metrics["val_threshold"] = nb_thresh
+    pred_counts_val = nb.predict(splits.X_val)
+    roll_val        = splits.val_df["cases_roll28"].values.clip(1)
+    nb_proba_val    = np.clip(pred_counts_val / (roll_val * 1.5), 0, 1)
 
-    _print_comparison(lgbm_metrics, nb_metrics, split="val")
-    return {"lgbm": lgbm_metrics, "nb": nb_metrics, "nb_model": nb}
+    nb_thresh, _ = _find_f2_threshold(splits.y_val, nb_proba_val)
+    nb_pred      = (nb_proba_val >= nb_thresh).astype(int)
+    nb_metrics   = _metrics(splits.y_val, nb_pred, nb_proba_val, prefix="val_")
+    nb_metrics["nb_threshold"] = nb_thresh
+    
+    persist_pred_val    = splits.val_df["outbreak_lag1"].fillna(0).astype(int).values
+    persist_proba_val   = persist_pred_val.astype(float)
+    persist_metrics_val = _metrics(splits.y_val, persist_pred_val,
+                                   persist_proba_val, prefix="val_")
 
+    return {"lgbm": lgbm_metrics, "nb": nb_metrics,
+            "nb_model": nb, "persistence": persist_metrics_val}
+    
 
 # ──────────────────────────────────────────────────────────────
 # Stage 4 · test  (run ONCE at the very end)
@@ -243,6 +253,7 @@ def test(model: lgb.LGBMClassifier,
          calibrator: LogisticRegression,
          threshold: float,
          nb_model: PoissonRegressor,
+         nb_threshold,
          splits: TrainingSplits) -> dict:
     """
     Final hold-out evaluation. Run only once.
@@ -252,30 +263,38 @@ def test(model: lgb.LGBMClassifier,
     # ── LightGBM ──────────────────────────────────────────────
     test_proba_cal = calibrator.predict_proba(
     model.predict_proba(splits.X_test)[:, 1].reshape(-1, 1)
-)[:, 1]
+    )[:, 1]
     test_pred      = (test_proba_cal >= threshold).astype(int)
     lgbm_metrics   = _metrics(splits.y_test, test_pred, test_proba_cal, prefix="test_")
     lgbm_metrics["test_threshold"] = threshold
 
     # ── NB baseline (refit on train+val combined) ─────────────
-    X_trainval = np.vstack([splits.X_train, splits.X_val])
+    nb_final = PoissonRegressor(alpha=1.0, max_iter=300)
+    X_trainval      = np.vstack([splits.X_train, splits.X_val])
     y_trainval_counts = np.concatenate([
-        splits.val_df["dengue_total"].values.clip(0),   # val counts
+        splits.y_train_counts,
+        splits.y_val_counts,
     ])
-    # NOTE: train counts not stored in splits → use nb_model already trained on val
-    # as a conservative proxy (slightly underestimates NB perf, acceptable)
+
     pred_counts   = nb_model.predict(splits.X_test)
     roll_baseline = splits.test_df["cases_roll28"].values.clip(1)
     nb_proba      = np.clip(pred_counts / (roll_baseline * 1.5), 0, 1)
-    nb_thresh, _  = _find_f2_threshold(splits.y_test, nb_proba)
-    nb_pred       = (nb_proba >= nb_thresh).astype(int)
-    nb_metrics    = _metrics(splits.y_test, nb_pred, nb_proba, prefix="test_")
-    nb_metrics["test_threshold"] = nb_thresh
 
-    _print_comparison(lgbm_metrics, nb_metrics, split="test")
-    return {"lgbm": lgbm_metrics, "nb": nb_metrics}
+    # threshold = find_f2_threshold(y_test,
+    nb_pred       = (nb_proba >= nb_threshold).astype(int)
+    nb_metrics = _metrics(splits.y_test, nb_pred, nb_proba, prefix="test_")
 
+    # ── Persistence baseline（add）─────────────────────────
+    # last week's persistence
+    persist_pred  = splits.test_df["outbreak_lag1"].fillna(0).astype(int).values
+    persist_proba = persist_pred.astype(float)  # 0.0 or 1.0
+    persist_metrics = _metrics(
+        splits.y_test, persist_pred, persist_proba, prefix="test_"
+    )
 
+    # print three models comparison
+    _print_comparison_three(lgbm_metrics, nb_metrics, persist_metrics, split="test")
+    return {"lgbm": lgbm_metrics, "nb": nb_metrics, "persistence": persist_metrics}
 # ──────────────────────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────────────────────
@@ -289,14 +308,14 @@ def feature_importance(model: lgb.LGBMClassifier) -> pd.DataFrame:
             .reset_index(drop=True))
 
 
-def _print_comparison(lgbm: dict, nb: dict, split: str):
+def _print_comparison_three(lgbm: dict, nb: dict, persist: dict, split: str):
     keys = ["f2", "f1", "precision", "recall", "roc_auc", "pr_auc"]
-    print(f"\n── {split} comparison ───────────────────────────────")
-    print(f"{'metric':<14} {'LightGBM':>10} {'NB baseline':>12}")
-    print("-" * 38)
+    print(f"\n── {split} comparison ─────────────────────────────────────")
+    print(f"{'metric':<14} {'LightGBM':>10} {'NB baseline':>12} {'Persistence':>12}")
+    print("-" * 52)
     for k in keys:
-        lv = lgbm.get(f"{split}_{k}", lgbm.get(k, "—"))
-        nv = nb.get(f"{split}_{k}", nb.get(k, "—"))
-        lv_s = f"{lv:.4f}" if isinstance(lv, float) else str(lv)
-        nv_s = f"{nv:.4f}" if isinstance(nv, float) else str(nv)
-        print(f"{k:<14} {lv_s:>10} {nv_s:>12}")
+        lv = lgbm.get(f"{split}_{k}", "—")
+        nv = nb.get(f"{split}_{k}", "—")
+        pv = persist.get(f"{split}_{k}", "—")
+        fmt = lambda v: f"{v:.4f}" if isinstance(v, float) else str(v)
+        print(f"{k:<14} {fmt(lv):>10} {fmt(nv):>12} {fmt(pv):>12}")

@@ -77,22 +77,37 @@ print(f"Calibrate run id: {calibrate_run_id}  |  threshold = {threshold:.4f}")
 
 # COMMAND ----------
 
+import importlib
+import training.model
+importlib.reload(training.model)
+from training.model import validate, test, load_and_split, _print_comparison_three
 with mlflow.start_run(run_name="LightGBM_validate") as run:
     val_results = validate(lgbm_model, calibrator, threshold, splits)
- 
-    mlflow.log_metrics(val_results["lgbm"])
+    mlflow.log_metrics({k: v for k, v in val_results["lgbm"].items()
+                        if isinstance(v, (int, float)) and v == v})
     mlflow.log_metrics({f"nb_{k}": v for k, v in val_results["nb"].items()
-                        if isinstance(v, (int, float))})
- 
-nb_model = val_results["nb_model"]   # carry forward for test stage
+                        if isinstance(v, (int, float)) and v == v})
+
+nb_model     = val_results["nb_model"]
+nb_threshold = val_results["nb"]["nb_threshold"]
+
+# 在 with 块外面打印，不受 mlflow 输出干扰
+_print_comparison_three(val_results["lgbm"], val_results["nb"],
+                        val_results["persistence"], split="val")
 
 # COMMAND ----------
 
+# test comparison
 with mlflow.start_run(run_name="LightGBM_test") as run:
-    test_results = test(lgbm_model, calibrator, threshold, nb_model, splits)
- 
+    test_results = test(lgbm_model, calibrator, threshold,
+                        nb_model, nb_threshold, splits)  # add nb_threshold
+    
     mlflow.log_metrics(test_results["lgbm"])
     mlflow.log_metrics({f"nb_{k}": v for k, v in test_results["nb"].items()
+                        if isinstance(v, (int, float))})
+    # persistence record in mlflow
+    mlflow.log_metrics({f"persistence_{k}": v 
+                        for k, v in test_results["persistence"].items()
                         if isinstance(v, (int, float))})
     test_run_id = run.info.run_id
 
@@ -189,6 +204,12 @@ os.makedirs(DATA_SAVE_DIR,  exist_ok=True)
 joblib.dump(lgbm_model, f"{MODEL_SAVE_DIR}/lgbm_model.pkl")
 joblib.dump(calibrator, f"{MODEL_SAVE_DIR}/platt_calibrator.pkl")
 
+test_pred_df = splits.test_df.copy()
+test_pred_df["pred_prob"]  = calibrator.predict_proba(
+    lgbm_model.predict_proba(splits.X_test)[:, 1].reshape(-1, 1)
+)[:, 1]
+test_pred_df["pred_label"] = (test_pred_df["pred_prob"] >= threshold).astype(int)
+
 test_pred_df.to_parquet(f"{DATA_SAVE_DIR}/test_predictions.parquet", index=False)
 
 pd.DataFrame({
@@ -212,14 +233,6 @@ for f in ["lgbm_model.pkl", "platt_calibrator.pkl"]:
 
 size = os.path.getsize("/Workspace/Repos/gfine886@gmail.com/healthrisk/healthrisk/app/data/test_predictions.parquet")
 print(f"test_predictions.parquet: {size/1024/1024:.1f} MB")
-
-# COMMAND ----------
-
-# MAGIC %sh
-# MAGIC cd /Workspace/Repos/gfine886@gmail.com/healthrisk/healthrisk
-# MAGIC git add models/
-# MAGIC git add app/data/
-# MAGIC git status
 
 # COMMAND ----------
 
