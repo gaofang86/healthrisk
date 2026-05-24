@@ -9,3 +9,4 @@ __pycache__/
 
 # OS
 .DS_Store
+!frontend/public/test_predictions.csv
