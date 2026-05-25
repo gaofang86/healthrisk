@@ -2,6 +2,8 @@
 
 > Climate-sensitive disease risk · Monte Carlo uncertainty quantification · Community resource matching · Actionable public-private guidance
 
+**Live demo:** [healthrisk-xi.vercel.app](https://healthrisk-xi.vercel.app) · **API:** [healthrisk-bs57.onrender.com](https://healthrisk-bs57.onrender.com) · **Code:** [github.com/gaofang86/healthrisk](https://github.com/gaofang86/healthrisk)
+
 An end-to-end system that detects dengue outbreak risk from climate data, translates model probabilities into budget-constrained action plans, and connects vulnerable community members with local resources — with a React interface for both residents and government officers.
 
 ---
