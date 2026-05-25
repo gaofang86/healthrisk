@@ -17,7 +17,7 @@ const TIER_STYLE = {
   critical: { bg: "#FCEBEB", text: "#A32D2D", border: "#E24B4A", icon: "▲▲" },
 };
 
-const COMMUNITY_NEEDS = [
+const INITIAL_NEEDS = [
   {
     id: 1,
     priority: "sick",
@@ -26,6 +26,7 @@ const COMMUNITY_NEEDS = [
     detail:
       "Fever 3 days, no transport to clinic. Needs: ride to Puskesmas + check-in tomorrow.",
     needs: ["Car transport", "Check-in visit"],
+    source: "seed",
   },
   {
     id: 2,
@@ -35,6 +36,7 @@ const COMMUNITY_NEEDS = [
     detail:
       "Discharged yesterday, needs soft food & ORS. Single mother, 2 young children.",
     needs: ["Food / ORS", "Childcare help"],
+    source: "seed",
   },
   {
     id: 3,
@@ -44,6 +46,7 @@ const COMMUNITY_NEEDS = [
     detail:
       "Needs weekly check-in volunteer. Cannot empty water containers alone.",
     needs: ["Check-in visit", "Mosquito prevention"],
+    source: "seed",
   },
   {
     id: 4,
@@ -53,6 +56,7 @@ const COMMUNITY_NEEDS = [
     detail:
       "Recently laid off. Needs food assistance and mosquito net. No BPJS card.",
     needs: ["Food bank", "Mosquito net", "BPJS guidance"],
+    source: "seed",
   },
   {
     id: 5,
@@ -61,10 +65,11 @@ const COMMUNITY_NEEDS = [
     name: "Pak Dimas, 29 — freelancer",
     detail: "No health insurance, worried about treatment costs if sick.",
     needs: ["BPJS guidance"],
+    source: "seed",
   },
 ];
 
-const COMMUNITY_RESOURCES = [
+const INITIAL_RESOURCES = [
   {
     id: 1,
     initials: "BW",
@@ -74,6 +79,7 @@ const COMMUNITY_RESOURCES = [
     availability: "Weekday afternoons",
     color: "#E1F5EE",
     textColor: "#0F6E56",
+    source: "seed",
   },
   {
     id: 2,
@@ -84,6 +90,7 @@ const COMMUNITY_RESOURCES = [
     availability: "Saturday 9am–12pm",
     color: "#FAEEDA",
     textColor: "#854F0B",
+    source: "seed",
   },
   {
     id: 3,
@@ -94,6 +101,7 @@ const COMMUNITY_RESOURCES = [
     availability: "Online Q&A",
     color: "#E6F1FB",
     textColor: "#185FA5",
+    source: "seed",
   },
   {
     id: 4,
@@ -104,8 +112,26 @@ const COMMUNITY_RESOURCES = [
     availability: "Group buy coordinator",
     color: "#EEEDFE",
     textColor: "#3C3489",
+    source: "seed",
   },
 ];
+
+const SITUATION_TO_PRIORITY = {
+  "I or someone in my household is sick": "sick",
+  "I am elderly and live alone": "elderly",
+  "I am unemployed / low income": "unemployed",
+  "I don't have BPJS / health insurance": "no_bpjs",
+  "I need food or basic supplies": "unemployed",
+  "I need transport to a clinic": "sick",
+  Other: "no_bpjs",
+};
+
+const PRIORITY_LABEL_MAP = {
+  sick: "Priority 1 · Sick",
+  elderly: "Priority 2 · Elderly",
+  unemployed: "Priority 2 · Unemployed",
+  no_bpjs: "Priority 3 · No BPJS",
+};
 
 const PRIORITY_COLORS = {
   sick: { bg: "#FCEBEB", text: "#A32D2D", border: "#E24B4A" },
@@ -113,6 +139,14 @@ const PRIORITY_COLORS = {
   unemployed: { bg: "#FAEEDA", text: "#854F0B", border: "#EF9F27" },
   no_bpjs: { bg: "#E6F1FB", text: "#185FA5", border: "#85B7EB" },
 };
+
+const RESOURCE_COLORS = [
+  { color: "#E1F5EE", textColor: "#0F6E56" },
+  { color: "#FAEEDA", textColor: "#854F0B" },
+  { color: "#E6F1FB", textColor: "#185FA5" },
+  { color: "#EEEDFE", textColor: "#3C3489" },
+  { color: "#EAF3DE", textColor: "#3B6D11" },
+];
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
@@ -511,6 +545,473 @@ function AskPanel({ riskLevel }) {
   );
 }
 
+// ── PostRequestForm ──────────────────────────────────────────────────────────
+function PostRequestForm({ onSubmit }) {
+  const [situation, setSituation] = useState(
+    "I or someone in my household is sick",
+  );
+  const [checkedNeeds, setCheckedNeeds] = useState([]);
+  const [urgency, setUrgency] = useState("Today / within hours");
+  const [details, setDetails] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const needOptions = [
+    "Ride to clinic",
+    "Food / ORS",
+    "Medication",
+    "Check-in visitor",
+    "Mosquito net",
+    "BPJS guidance",
+    "Childcare",
+  ];
+
+  function toggleNeed(o) {
+    setCheckedNeeds((prev) =>
+      prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o],
+    );
+  }
+
+  function handleSubmit() {
+    const priority = SITUATION_TO_PRIORITY[situation] || "no_bpjs";
+    onSubmit({
+      priority,
+      priorityLabel: PRIORITY_LABEL_MAP[priority],
+      name: `Anonymous · ${urgency}`,
+      detail: `${situation}${details ? " — " + details : ""}`,
+      needs: checkedNeeds.length > 0 ? checkedNeeds : ["General help"],
+      source: "user",
+    });
+    setSubmitted(true);
+  }
+
+  if (submitted) {
+    return (
+      <div
+        style={{
+          background: "#EAF3DE",
+          border: "0.5px solid #97C459",
+          borderRadius: 12,
+          padding: "2rem",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: 28, marginBottom: 8 }}>✓</div>
+        <div
+          style={{
+            fontSize: 15,
+            fontWeight: 600,
+            color: "#3B6D11",
+            marginBottom: 6,
+          }}
+        >
+          Request posted
+        </div>
+        <div style={{ fontSize: 13, color: "#3B6D11", marginBottom: 16 }}>
+          Your request is now visible on the Needs board.
+        </div>
+        <button
+          onClick={() => setSubmitted(false)}
+          style={{
+            fontSize: 12,
+            padding: "6px 16px",
+            borderRadius: 8,
+            border: "0.5px solid #3B6D11",
+            background: "none",
+            cursor: "pointer",
+            color: "#3B6D11",
+            fontFamily: "inherit",
+          }}
+        >
+          Post another
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "0.5px solid #eee",
+        borderRadius: 12,
+        padding: "2rem",
+      }}
+    >
+      <div style={{ marginBottom: 12 }}>
+        <label
+          style={{
+            fontSize: 12,
+            color: "#666",
+            display: "block",
+            marginBottom: 4,
+          }}
+        >
+          Your situation
+        </label>
+        <select
+          value={situation}
+          onChange={(e) => setSituation(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px 14px",
+            fontSize: 14,
+            border: "0.5px solid #ddd",
+            borderRadius: 8,
+            fontFamily: "inherit",
+          }}
+        >
+          <option>I or someone in my household is sick</option>
+          <option>I am elderly and live alone</option>
+          <option>I am unemployed / low income</option>
+          <option>I don&apos;t have BPJS / health insurance</option>
+          <option>I need food or basic supplies</option>
+          <option>I need transport to a clinic</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <label
+          style={{
+            fontSize: 12,
+            color: "#666",
+            display: "block",
+            marginBottom: 6,
+          }}
+        >
+          What do you need?
+        </label>
+        {needOptions.map((o) => (
+          <label
+            key={o}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              fontSize: 12,
+              color: "#555",
+              marginRight: 12,
+              marginBottom: 6,
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={checkedNeeds.includes(o)}
+              onChange={() => toggleNeed(o)}
+            />{" "}
+            {o}
+          </label>
+        ))}
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <label
+          style={{
+            fontSize: 12,
+            color: "#666",
+            display: "block",
+            marginBottom: 4,
+          }}
+        >
+          How urgent?
+        </label>
+        <select
+          value={urgency}
+          onChange={(e) => setUrgency(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px 14px",
+            fontSize: 14,
+            border: "0.5px solid #ddd",
+            borderRadius: 8,
+            fontFamily: "inherit",
+          }}
+        >
+          <option>Today / within hours</option>
+          <option>This week</option>
+          <option>Ongoing / recurring</option>
+        </select>
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <label
+          style={{
+            fontSize: 12,
+            color: "#666",
+            display: "block",
+            marginBottom: 4,
+          }}
+        >
+          Additional details (optional)
+        </label>
+        <textarea
+          value={details}
+          onChange={(e) => setDetails(e.target.value)}
+          placeholder="Location, urgency, number of people..."
+          style={{
+            width: "100%",
+            padding: "7px 10px",
+            fontSize: 13,
+            border: "0.5px solid #ddd",
+            borderRadius: 8,
+            minHeight: 100,
+            resize: "vertical",
+            fontFamily: "inherit",
+          }}
+        />
+      </div>
+      <button
+        onClick={handleSubmit}
+        style={{
+          padding: "11px 28px",
+          background: "#185FA5",
+          color: "#fff",
+          border: "none",
+          borderRadius: 8,
+          fontSize: 13,
+          cursor: "pointer",
+          fontFamily: "inherit",
+        }}
+      >
+        Submit request
+      </button>
+    </div>
+  );
+}
+
+// ── ShareResourceForm ────────────────────────────────────────────────────────
+function ShareResourceForm({ onSubmit, userResourceCount }) {
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [checkedOffers, setCheckedOffers] = useState([]);
+  const [details, setDetails] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const offerOptions = [
+    "Car / transport",
+    "Food / groceries",
+    "Medical advice",
+    "Mosquito repellent",
+    "Spare bed / shelter",
+    "Childcare",
+    "Medication",
+    "Other",
+  ];
+
+  function toggleOffer(o) {
+    setCheckedOffers((prev) =>
+      prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o],
+    );
+  }
+
+  function handleSubmit() {
+    if (!name.trim()) return;
+    const colorSet =
+      RESOURCE_COLORS[userResourceCount % RESOURCE_COLORS.length];
+    const initials = name
+      .trim()
+      .split(" ")
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+    const areaMatch = name.match(/RT\s*\d+/i);
+    const area = areaMatch ? areaMatch[0].toUpperCase() : "Community";
+    const cleanName = name.replace(/·.*/, "").trim();
+    onSubmit({
+      initials,
+      name: cleanName,
+      area,
+      type:
+        checkedOffers.length > 0 ? checkedOffers.join(", ") : "General help",
+      availability:
+        details || (contact ? `Contact: ${contact}` : "Ask for availability"),
+      ...colorSet,
+      source: "user",
+    });
+    setSubmitted(true);
+  }
+
+  if (submitted) {
+    return (
+      <div
+        style={{
+          background: "#EAF3DE",
+          border: "0.5px solid #97C459",
+          borderRadius: 12,
+          padding: "2rem",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: 28, marginBottom: 8 }}>✓</div>
+        <div
+          style={{
+            fontSize: 15,
+            fontWeight: 600,
+            color: "#3B6D11",
+            marginBottom: 6,
+          }}
+        >
+          Resource posted
+        </div>
+        <div style={{ fontSize: 13, color: "#3B6D11", marginBottom: 16 }}>
+          Your offer is now visible on the Needs board and Community plaza.
+        </div>
+        <button
+          onClick={() => {
+            setSubmitted(false);
+            setName("");
+            setContact("");
+            setCheckedOffers([]);
+            setDetails("");
+          }}
+          style={{
+            fontSize: 12,
+            padding: "6px 16px",
+            borderRadius: 8,
+            border: "0.5px solid #3B6D11",
+            background: "none",
+            cursor: "pointer",
+            color: "#3B6D11",
+            fontFamily: "inherit",
+          }}
+        >
+          Post another
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "0.5px solid #eee",
+        borderRadius: 12,
+        padding: "2rem",
+      }}
+    >
+      {[
+        {
+          label: "Your name & location (RT/RW)",
+          value: name,
+          setter: setName,
+          ph: "e.g. Budi Winarso · RT 04 / RW 02",
+        },
+        {
+          label: "Phone / contact (optional)",
+          value: contact,
+          setter: setContact,
+          ph: "e.g. 0812-xxxx-xxxx",
+        },
+      ].map((f, i) => (
+        <div key={i} style={{ marginBottom: 12 }}>
+          <label
+            style={{
+              fontSize: 12,
+              color: "#666",
+              display: "block",
+              marginBottom: 4,
+            }}
+          >
+            {f.label}
+          </label>
+          <input
+            type="text"
+            value={f.value}
+            onChange={(e) => f.setter(e.target.value)}
+            placeholder={f.ph}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              fontSize: 14,
+              border: "0.5px solid #ddd",
+              borderRadius: 8,
+              fontFamily: "inherit",
+            }}
+          />
+        </div>
+      ))}
+      <div style={{ marginBottom: 12 }}>
+        <label
+          style={{
+            fontSize: 12,
+            color: "#666",
+            display: "block",
+            marginBottom: 6,
+          }}
+        >
+          What can you offer?
+        </label>
+        {offerOptions.map((o) => (
+          <label
+            key={o}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              fontSize: 12,
+              color: "#555",
+              marginRight: 12,
+              marginBottom: 6,
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={checkedOffers.includes(o)}
+              onChange={() => toggleOffer(o)}
+            />{" "}
+            {o}
+          </label>
+        ))}
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <label
+          style={{
+            fontSize: 12,
+            color: "#666",
+            display: "block",
+            marginBottom: 4,
+          }}
+        >
+          Details & availability
+        </label>
+        <textarea
+          value={details}
+          onChange={(e) => setDetails(e.target.value)}
+          placeholder="e.g. I can drive people to Puskesmas on weekday afternoons."
+          style={{
+            width: "100%",
+            padding: "7px 10px",
+            fontSize: 13,
+            border: "0.5px solid #ddd",
+            borderRadius: 8,
+            minHeight: 100,
+            resize: "vertical",
+            fontFamily: "inherit",
+          }}
+        />
+      </div>
+      <button
+        onClick={handleSubmit}
+        disabled={!name.trim()}
+        style={{
+          padding: "11px 28px",
+          background: name.trim() ? "#1D9E75" : "#eee",
+          color: name.trim() ? "#fff" : "#aaa",
+          border: "none",
+          borderRadius: 8,
+          fontSize: 13,
+          cursor: name.trim() ? "pointer" : "default",
+          fontFamily: "inherit",
+        }}
+      >
+        Post resource offer
+      </button>
+    </div>
+  );
+}
+
+// ── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [predictions, setPredictions] = useState([]);
   const [countries, setCountries] = useState([]);
@@ -522,6 +1023,21 @@ export default function App() {
   const [role, setRole] = useState("resident");
   const [activePage, setActivePage] = useState("dashboard");
   const [matchNeed, setMatchNeed] = useState(null);
+
+  // ── Live state ──────────────────────────────────────────────────────────────
+  const [userNeeds, setUserNeeds] = useState([]);
+  const [userResources, setUserResources] = useState([]);
+
+  const allNeeds = [...INITIAL_NEEDS, ...userNeeds];
+  const allResources = [...INITIAL_RESOURCES, ...userResources];
+
+  function addNeed(need) {
+    setUserNeeds((prev) => [...prev, { ...need, id: Date.now() }]);
+  }
+
+  function addResource(resource) {
+    setUserResources((prev) => [...prev, { ...resource, id: Date.now() }]);
+  }
 
   const riskLevel = probToTier(predProb).tier;
   const isCritical = riskIdx >= 2;
@@ -621,6 +1137,10 @@ export default function App() {
 
   const navItems = role === "resident" ? residentNav : govNav;
 
+  // derived counts for dashboard / gov
+  const openNeedsCount = allNeeds.length;
+  const unmatchedCount = userNeeds.length; // user-posted ones are always "unmatched" initially
+
   return (
     <div
       style={{
@@ -633,7 +1153,7 @@ export default function App() {
       {matchNeed && (
         <MatchPanel
           need={matchNeed}
-          resources={COMMUNITY_RESOURCES}
+          resources={allResources}
           riskLevel={riskLevel}
           onClose={() => setMatchNeed(null)}
         />
@@ -651,7 +1171,6 @@ export default function App() {
           flexDirection: "column",
         }}
       >
-        {/* logo */}
         <div style={{ marginBottom: 4 }}>
           <div
             style={{
@@ -667,10 +1186,7 @@ export default function App() {
             Community mutual aid
           </div>
         </div>
-
         <div style={{ height: 1, background: "#f0f0f0", margin: "14px 0" }} />
-
-        {/* role toggle */}
         <div
           style={{
             display: "flex",
@@ -700,8 +1216,6 @@ export default function App() {
             </button>
           ))}
         </div>
-
-        {/* risk badge */}
         <div
           style={{
             padding: "10px 12px",
@@ -724,8 +1238,6 @@ export default function App() {
             pred_prob: {predProb.toFixed(3)} · threshold: {THRESHOLD}
           </div>
         </div>
-
-        {/* country selector */}
         <div style={{ marginBottom: 10 }}>
           <div
             style={{
@@ -761,8 +1273,6 @@ export default function App() {
             ))}
           </select>
         </div>
-
-        {/* week selector */}
         <div style={{ marginBottom: 14 }}>
           <div
             style={{
@@ -798,10 +1308,7 @@ export default function App() {
             ))}
           </select>
         </div>
-
         <div style={{ height: 1, background: "#f0f0f0", marginBottom: 14 }} />
-
-        {/* nav */}
         <div
           style={{
             fontSize: 11,
@@ -836,9 +1343,23 @@ export default function App() {
             }}
           >
             <span style={{ fontSize: 15 }}>{n.icon}</span> {n.label}
+            {n.id === "needs" && userNeeds.length > 0 && (
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: 10,
+                  background: "#E24B4A",
+                  color: "#fff",
+                  borderRadius: 10,
+                  padding: "1px 6px",
+                  fontWeight: 700,
+                }}
+              >
+                {userNeeds.length} new
+              </span>
+            )}
           </button>
         ))}
-
         <div
           style={{
             marginTop: "auto",
@@ -867,7 +1388,6 @@ export default function App() {
         {/* RESIDENT DASHBOARD */}
         {activePage === "dashboard" &&
           (() => {
-            const relativeRisk = (predProb / 0.1912).toFixed(2);
             const actionsByTier = {
               low: [
                 {
@@ -1162,6 +1682,58 @@ export default function App() {
                     risk this week
                   </div>
                 </div>
+
+                {/* live needs summary */}
+                {userNeeds.length > 0 && (
+                  <div
+                    style={{
+                      background: "#FCEBEB",
+                      border: "0.5px solid #F09595",
+                      borderRadius: 10,
+                      padding: "12px 16px",
+                      marginBottom: 20,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <span style={{ fontSize: 18 }}>📋</span>
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: "#A32D2D",
+                        }}
+                      >
+                        {userNeeds.length} new community request
+                        {userNeeds.length > 1 ? "s" : ""} posted
+                      </div>
+                      <div
+                        style={{ fontSize: 12, color: "#A32D2D", opacity: 0.8 }}
+                      >
+                        Check the Needs board to help your neighbors.
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navTo("needs")}
+                      style={{
+                        marginLeft: "auto",
+                        fontSize: 12,
+                        padding: "5px 12px",
+                        borderRadius: 7,
+                        border: "0.5px solid #E24B4A",
+                        background: "none",
+                        cursor: "pointer",
+                        color: "#A32D2D",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      View →
+                    </button>
+                  </div>
+                )}
+
                 {recentRows.length > 1 && (
                   <div
                     style={{
@@ -1505,6 +2077,91 @@ export default function App() {
                 requests are prioritized.
               </div>
             )}
+            {/* user-posted resources appear at the top */}
+            {userResources.map((r, i) => (
+              <div
+                key={r.id}
+                style={{
+                  background: "#fff",
+                  border: "0.5px solid #eee",
+                  borderRadius: 12,
+                  padding: "12px 14px",
+                  marginBottom: 10,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    marginBottom: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      background: r.color,
+                      color: r.textColor,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {r.initials}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>
+                      {r.name}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#aaa" }}>
+                      just now · {r.area}
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      padding: "2px 8px",
+                      borderRadius: 6,
+                      background: r.color,
+                      color: r.textColor,
+                    }}
+                  >
+                    New offer
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "#333",
+                    lineHeight: 1.6,
+                    marginBottom: 8,
+                  }}
+                >
+                  {r.type}
+                  {r.availability && r.availability !== "Ask for availability"
+                    ? ` — ${r.availability}`
+                    : ""}
+                </div>
+                <button
+                  style={{
+                    fontSize: 12,
+                    padding: "3px 10px",
+                    borderRadius: 6,
+                    border: "0.5px solid #ddd",
+                    background: "none",
+                    cursor: "pointer",
+                    color: "#666",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Reply
+                </button>
+              </div>
+            ))}
             {[
               {
                 initials: "BW",
@@ -1659,16 +2316,21 @@ export default function App() {
                 <div
                   style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}
                 >
-                  Open needs
+                  Open needs{" "}
+                  <span
+                    style={{ fontSize: 12, color: "#888", fontWeight: 400 }}
+                  >
+                    ({allNeeds.length})
+                  </span>
                 </div>
-                {COMMUNITY_NEEDS.map((n) => {
+                {allNeeds.map((n) => {
                   const pc = PRIORITY_COLORS[n.priority];
                   return (
                     <div
                       key={n.id}
                       style={{
                         borderLeft: `3px solid ${pc.border}`,
-                        background: "#fff",
+                        background: n.source === "user" ? "#FAFFF7" : "#fff",
                         border: "0.5px solid #eee",
                         borderLeftWidth: 3,
                         borderLeftColor: pc.border,
@@ -1677,20 +2339,41 @@ export default function App() {
                         marginBottom: 8,
                       }}
                     >
-                      <span
+                      <div
                         style={{
-                          fontSize: 11,
-                          padding: "2px 8px",
-                          borderRadius: 6,
-                          background: pc.bg,
-                          color: pc.text,
-                          fontWeight: 500,
-                          display: "inline-block",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
                           marginBottom: 6,
                         }}
                       >
-                        {n.priorityLabel}
-                      </span>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            padding: "2px 8px",
+                            borderRadius: 6,
+                            background: pc.bg,
+                            color: pc.text,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {n.priorityLabel}
+                        </span>
+                        {n.source === "user" && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              padding: "1px 6px",
+                              borderRadius: 6,
+                              background: "#EAF3DE",
+                              color: "#3B6D11",
+                              fontWeight: 600,
+                            }}
+                          >
+                            NEW
+                          </span>
+                        )}
+                      </div>
                       <div
                         style={{
                           fontSize: 13,
@@ -1728,16 +2411,21 @@ export default function App() {
                 <div
                   style={{ fontSize: 15, fontWeight: 600, marginBottom: 10 }}
                 >
-                  Available resources
+                  Available resources{" "}
+                  <span
+                    style={{ fontSize: 12, color: "#888", fontWeight: 400 }}
+                  >
+                    ({allResources.length})
+                  </span>
                 </div>
-                {COMMUNITY_RESOURCES.map((r) => (
+                {allResources.map((r) => (
                   <div
                     key={r.id}
                     style={{
                       display: "flex",
                       alignItems: "flex-start",
                       gap: 10,
-                      background: "#fff",
+                      background: r.source === "user" ? "#FAFFF7" : "#fff",
                       border: "0.5px solid #eee",
                       borderRadius: 8,
                       padding: "10px 12px",
@@ -1761,9 +2449,31 @@ export default function App() {
                     >
                       {r.initials}
                     </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 500 }}>
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
                         {r.name} · {r.area}
+                        {r.source === "user" && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              padding: "1px 6px",
+                              borderRadius: 6,
+                              background: "#EAF3DE",
+                              color: "#3B6D11",
+                              fontWeight: 600,
+                            }}
+                          >
+                            NEW
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: 12, color: "#666" }}>
                         {r.type}
@@ -1794,7 +2504,8 @@ export default function App() {
                   >
                     <span style={{ color: "#666" }}>Community matched</span>
                     <span style={{ color: "#3B6D11", fontWeight: 500 }}>
-                      3 / 5 needs
+                      {Math.min(allResources.length, allNeeds.length)} /{" "}
+                      {allNeeds.length} needs
                     </span>
                   </div>
                   <div
@@ -1807,7 +2518,7 @@ export default function App() {
                   >
                     <span style={{ color: "#666" }}>Gap (needs gov)</span>
                     <span style={{ color: "#A32D2D", fontWeight: 500 }}>
-                      2 needs
+                      {Math.max(0, allNeeds.length - allResources.length)} needs
                     </span>
                   </div>
                 </div>
@@ -1834,129 +2545,10 @@ export default function App() {
                 alignItems: "start",
               }}
             >
-              <div
-                style={{
-                  background: "#fff",
-                  border: "0.5px solid #eee",
-                  borderRadius: 12,
-                  padding: "2rem",
-                }}
-              >
-                {[
-                  {
-                    label: "Your name & location (RT/RW)",
-                    type: "text",
-                    ph: "e.g. Budi Winarso · RT 04 / RW 02",
-                  },
-                  {
-                    label: "Phone / contact (optional)",
-                    type: "text",
-                    ph: "e.g. 0812-xxxx-xxxx",
-                  },
-                ].map((f, i) => (
-                  <div key={i} style={{ marginBottom: 12 }}>
-                    <label
-                      style={{
-                        fontSize: 12,
-                        color: "#666",
-                        display: "block",
-                        marginBottom: 4,
-                      }}
-                    >
-                      {f.label}
-                    </label>
-                    <input
-                      type={f.type}
-                      placeholder={f.ph}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        fontSize: 14,
-                        border: "0.5px solid #ddd",
-                        borderRadius: 8,
-                        fontFamily: "inherit",
-                      }}
-                    />
-                  </div>
-                ))}
-                <div style={{ marginBottom: 12 }}>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      color: "#666",
-                      display: "block",
-                      marginBottom: 6,
-                    }}
-                  >
-                    What can you offer?
-                  </label>
-                  {[
-                    "Car / transport",
-                    "Food / groceries",
-                    "Medical advice",
-                    "Mosquito repellent",
-                    "Spare bed / shelter",
-                    "Childcare",
-                    "Medication",
-                    "Other",
-                  ].map((o) => (
-                    <label
-                      key={o}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 5,
-                        fontSize: 12,
-                        color: "#555",
-                        marginRight: 12,
-                        marginBottom: 6,
-                        cursor: "pointer",
-                      }}
-                    >
-                      <input type="checkbox" /> {o}
-                    </label>
-                  ))}
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      color: "#666",
-                      display: "block",
-                      marginBottom: 4,
-                    }}
-                  >
-                    Details & availability
-                  </label>
-                  <textarea
-                    placeholder="e.g. I can drive people to Puskesmas on weekday afternoons."
-                    style={{
-                      width: "100%",
-                      padding: "7px 10px",
-                      fontSize: 13,
-                      border: "0.5px solid #ddd",
-                      borderRadius: 8,
-                      minHeight: 100,
-                      resize: "vertical",
-                      fontFamily: "inherit",
-                    }}
-                  />
-                </div>
-                <button
-                  style={{
-                    padding: "11px 28px",
-                    background: "#1D9E75",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  Post resource offer
-                </button>
-              </div>
+              <ShareResourceForm
+                onSubmit={addResource}
+                userResourceCount={userResources.length}
+              />
               <div>
                 <div
                   style={{
@@ -2076,147 +2668,7 @@ export default function App() {
                 alignItems: "start",
               }}
             >
-              <div
-                style={{
-                  background: "#fff",
-                  border: "0.5px solid #eee",
-                  borderRadius: 12,
-                  padding: "2rem",
-                }}
-              >
-                <div style={{ marginBottom: 12 }}>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      color: "#666",
-                      display: "block",
-                      marginBottom: 4,
-                    }}
-                  >
-                    Your situation
-                  </label>
-                  <select
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      fontSize: 14,
-                      border: "0.5px solid #ddd",
-                      borderRadius: 8,
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    <option>I or someone in my household is sick</option>
-                    <option>I am elderly and live alone</option>
-                    <option>I am unemployed / low income</option>
-                    <option>I don&apos;t have BPJS / health insurance</option>
-                    <option>I need food or basic supplies</option>
-                    <option>I need transport to a clinic</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      color: "#666",
-                      display: "block",
-                      marginBottom: 6,
-                    }}
-                  >
-                    What do you need?
-                  </label>
-                  {[
-                    "Ride to clinic",
-                    "Food / ORS",
-                    "Medication",
-                    "Check-in visitor",
-                    "Mosquito net",
-                    "BPJS guidance",
-                    "Childcare",
-                  ].map((o) => (
-                    <label
-                      key={o}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 5,
-                        fontSize: 12,
-                        color: "#555",
-                        marginRight: 12,
-                        marginBottom: 6,
-                        cursor: "pointer",
-                      }}
-                    >
-                      <input type="checkbox" /> {o}
-                    </label>
-                  ))}
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      color: "#666",
-                      display: "block",
-                      marginBottom: 4,
-                    }}
-                  >
-                    How urgent?
-                  </label>
-                  <select
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      fontSize: 14,
-                      border: "0.5px solid #ddd",
-                      borderRadius: 8,
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    <option>Today / within hours</option>
-                    <option>This week</option>
-                    <option>Ongoing / recurring</option>
-                  </select>
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      color: "#666",
-                      display: "block",
-                      marginBottom: 4,
-                    }}
-                  >
-                    Additional details (optional)
-                  </label>
-                  <textarea
-                    placeholder="Location, urgency, number of people..."
-                    style={{
-                      width: "100%",
-                      padding: "7px 10px",
-                      fontSize: 13,
-                      border: "0.5px solid #ddd",
-                      borderRadius: 8,
-                      minHeight: 100,
-                      resize: "vertical",
-                      fontFamily: "inherit",
-                    }}
-                  />
-                </div>
-                <button
-                  style={{
-                    padding: "11px 28px",
-                    background: "#185FA5",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  Submit request
-                </button>
-              </div>
+              <PostRequestForm onSubmit={addNeed} />
               <div>
                 <div
                   style={{
@@ -2334,40 +2786,32 @@ export default function App() {
         {/* GOV DASHBOARD */}
         {activePage === "gov-dashboard" &&
           (() => {
-            const govMetrics = {
-              low: {
-                openNeeds: 2,
-                unmatched: 0,
-                coverage: "85%",
-                budgetLeft: "$48k",
-                alert: null,
-              },
+            const baseMetrics = {
+              low: { coverage: "85%", budgetLeft: "$48k", alert: null },
               moderate: {
-                openNeeds: 3,
-                unmatched: 1,
                 coverage: "70%",
                 budgetLeft: "$44k",
                 alert:
                   "1 high-priority need unmatched. Recommend: volunteer check-in program for elderly.",
               },
               high: {
-                openNeeds: 5,
-                unmatched: 2,
                 coverage: "60%",
                 budgetLeft: "$42k",
                 alert:
                   "2 high-priority needs unmatched. Government action recommended: BPJS emergency enrollment + volunteer check-in.",
               },
               critical: {
-                openNeeds: 8,
-                unmatched: 4,
                 coverage: "40%",
                 budgetLeft: "$31k",
                 alert:
                   "CRITICAL: 4 needs unmatched. Deploy all available resources immediately. Activate emergency health response.",
               },
             };
-            const gm = govMetrics[riskLevel];
+            const gm = baseMetrics[riskLevel];
+            const totalUnmatched = Math.max(
+              0,
+              allNeeds.length - allResources.length,
+            );
             return (
               <div>
                 <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 6 }}>
@@ -2388,13 +2832,13 @@ export default function App() {
                   {[
                     {
                       label: "Open needs",
-                      value: gm.openNeeds.toString(),
-                      sub: `${gm.unmatched} unmatched`,
-                      vc: gm.unmatched > 0 ? "#A32D2D" : "#3B6D11",
+                      value: allNeeds.length.toString(),
+                      sub: `${totalUnmatched} unmatched`,
+                      vc: totalUnmatched > 0 ? "#A32D2D" : "#3B6D11",
                     },
                     {
                       label: "Community resources",
-                      value: "4",
+                      value: allResources.length.toString(),
                       sub: "active offers",
                     },
                     {
@@ -2482,28 +2926,36 @@ export default function App() {
                       {[
                         {
                           label: "Sick / recovering",
-                          count: "2 people",
+                          count:
+                            allNeeds.filter((n) => n.priority === "sick")
+                              .length + " people",
                           status: "Matched",
                           sc: "#3B6D11",
                           dot: "#A32D2D",
                         },
                         {
                           label: "Elderly alone",
-                          count: "1 person",
+                          count:
+                            allNeeds.filter((n) => n.priority === "elderly")
+                              .length + " person",
                           status: "Gap",
                           sc: "#854F0B",
                           dot: "#EF9F27",
                         },
                         {
                           label: "Unemployed / poor",
-                          count: "1 family",
+                          count:
+                            allNeeds.filter((n) => n.priority === "unemployed")
+                              .length + " family",
                           status: "Gap",
                           sc: "#854F0B",
                           dot: "#EF9F27",
                         },
                         {
                           label: "No BPJS",
-                          count: "1 person",
+                          count:
+                            allNeeds.filter((n) => n.priority === "no_bpjs")
+                              .length + " person",
                           status: "Guided",
                           sc: "#3B6D11",
                           dot: "#85B7EB",
@@ -2785,7 +3237,6 @@ export default function App() {
               },
             };
             const alloc = allocationByTier[riskLevel];
-            const usedPct = alloc.pct;
             return (
               <div>
                 <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 6 }}>
@@ -2829,7 +3280,7 @@ export default function App() {
                   >
                     <div
                       style={{
-                        width: usedPct,
+                        width: alloc.pct,
                         height: "100%",
                         background: riskIdx >= 2 ? "#E24B4A" : "#1D9E75",
                         borderRadius: 5,
@@ -2987,6 +3438,66 @@ export default function App() {
                 </div>
               );
             })}
+            {userNeeds.length > 0 && (
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    marginBottom: 8,
+                    marginTop: 16,
+                    color: "#111",
+                  }}
+                >
+                  New user-reported gaps ({userNeeds.length})
+                </div>
+                {userNeeds.map((n) => {
+                  const pc = PRIORITY_COLORS[n.priority];
+                  return (
+                    <div
+                      key={n.id}
+                      style={{
+                        borderLeft: `3px solid ${pc.border}`,
+                        background: "#fff",
+                        border: "0.5px solid #eee",
+                        borderLeftWidth: 3,
+                        borderLeftColor: pc.border,
+                        borderRadius: "0 8px 8px 0",
+                        padding: "10px 12px",
+                        marginBottom: 10,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 11,
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          background: pc.bg,
+                          color: pc.text,
+                          fontWeight: 500,
+                          display: "inline-block",
+                          marginBottom: 6,
+                        }}
+                      >
+                        {n.priorityLabel}
+                      </span>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          marginBottom: 2,
+                        }}
+                      >
+                        {n.name}
+                      </div>
+                      <div style={{ fontSize: 12, color: "#666" }}>
+                        {n.detail}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <div
               style={{
                 background: "#f5f5f5",
