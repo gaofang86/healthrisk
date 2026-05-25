@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://healthrisk-api.onrender.com/api/:path*"
+      "destination": "https://healthrisk-bs57.onrender.com/api/:path*"
     }
   ]
 }
