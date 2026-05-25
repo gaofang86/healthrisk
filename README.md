@@ -29,6 +29,23 @@ More importantly, they treat the response as a government problem. In practice, 
 | 🤝 **Matching** | Community resource board connecting those who have with those who need |
 | 📱 **Guidance** | Risk-adaptive interface that changes behaviour based on outbreak severity |
 
+<p align="center">
+  <img src="docs/1.png" width="48%"/>
+  <img src="docs/2.png" width="48%"/>
+</p>
+<p align="center">
+  <img src="docs/3.png" width="48%"/>
+  <img src="docs/4.png" width="48%"/>
+</p>
+<p align="center">
+  <img src="docs/5.png" width="48%"/>
+  <img src="docs/6.png" width="48%"/>
+</p>
+<p align="center">
+  <img src="docs/7.png" width="48%"/>
+  <img src="docs/8.png" width="48%"/>
+</p>
+
 ---
 
 ## Results
