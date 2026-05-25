@@ -148,6 +148,73 @@ const RESOURCE_COLORS = [
   { color: "#EAF3DE", textColor: "#3B6D11" },
 ];
 
+const SEED_POSTS = [
+  {
+    id: "p1",
+    initials: "BW",
+    color: "#E1F5EE",
+    tc: "#0F6E56",
+    name: "Budi Winarso",
+    area: "RT 04",
+    time: "2h ago",
+    tag: "Has car",
+    tagBg: "#EAF3DE",
+    tagTc: "#3B6D11",
+    body: "I can drive anyone who needs to get to Puskesmas this week — I have free afternoons. Especially happy to help elderly neighbors or anyone feeling unwell.",
+    likes: 4,
+    replies: [],
+    source: "seed",
+  },
+  {
+    id: "p2",
+    initials: "SH",
+    color: "#FAEEDA",
+    tc: "#854F0B",
+    name: "Siti Handayani",
+    area: "RT 07",
+    time: "5h ago",
+    tag: "Food bank",
+    tagBg: "#FAEEDA",
+    tagTc: "#854F0B",
+    body: "Our community food bank has extra rice, noodles, and oral rehydration salts. Families can pick up Saturday 9am–12pm at RT 07 balai. No ID required.",
+    likes: 7,
+    replies: [],
+    source: "seed",
+  },
+  {
+    id: "p3",
+    initials: "DN",
+    color: "#E6F1FB",
+    tc: "#185FA5",
+    name: "Dr. Nurul Aini",
+    area: "RT 02",
+    time: "1d ago",
+    tag: "Medical",
+    tagBg: "#E6F1FB",
+    tagTc: "#185FA5",
+    body: "I'm a nurse at RSUD. Happy to answer dengue questions here — when to go to hospital vs stay home, how to manage fever. Just reply or DM.",
+    likes: 12,
+    replies: [],
+    source: "seed",
+  },
+  {
+    id: "p4",
+    initials: "RJ",
+    color: "#EEEDFE",
+    tc: "#3C3489",
+    name: "Ratna Juwita",
+    area: "RT 11",
+    time: "1d ago",
+    tag: "Prevention",
+    tagBg: "#EEEDFE",
+    tagTc: "#534AB7",
+    body: "Group mosquito larvicide purchase — 20 bottles for Rp 180,000 split between households. Much cheaper than buying alone. DM before Friday.",
+    likes: 3,
+    replies: [],
+    source: "seed",
+  },
+];
+
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 async function callMatch(need, resource, riskLevel) {
@@ -184,6 +251,7 @@ async function callAsk(question, riskLevel) {
   return data.result;
 }
 
+// ── MatchPanel ───────────────────────────────────────────────────────────────
 function MatchPanel({ need, resources, riskLevel, onClose }) {
   const [selectedResource, setSelectedResource] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -422,6 +490,7 @@ function MatchPanel({ need, resources, riskLevel, onClose }) {
   );
 }
 
+// ── AskPanel ─────────────────────────────────────────────────────────────────
 function AskPanel({ riskLevel }) {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1011,6 +1080,237 @@ function ShareResourceForm({ onSubmit, userResourceCount }) {
   );
 }
 
+// ── PlazaPost ────────────────────────────────────────────────────────────────
+function PlazaPost({ post: p, onLike, onReply }) {
+  const [showReply, setShowReply] = useState(false);
+  const [replyName, setReplyName] = useState("");
+  const [replyText, setReplyText] = useState("");
+  const [liked, setLiked] = useState(false);
+
+  function handleLike() {
+    if (liked) return;
+    setLiked(true);
+    onLike();
+  }
+
+  function handleSend() {
+    if (!replyText.trim()) return;
+    onReply({
+      author: replyName.trim() || "Anonymous",
+      text: replyText.trim(),
+    });
+    setReplyName("");
+    setReplyText("");
+    setShowReply(false);
+  }
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "0.5px solid #eee",
+        borderRadius: 12,
+        padding: "12px 14px",
+        marginBottom: 10,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 8,
+        }}
+      >
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: p.color,
+            color: p.tc,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 12,
+            fontWeight: 500,
+            flexShrink: 0,
+          }}
+        >
+          {p.initials}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</div>
+          <div style={{ fontSize: 11, color: "#aaa" }}>
+            {p.time} · {p.area}
+          </div>
+        </div>
+        <span
+          style={{
+            fontSize: 11,
+            padding: "2px 8px",
+            borderRadius: 6,
+            background: p.tagBg,
+            color: p.tagTc,
+          }}
+        >
+          {p.tag}
+        </span>
+      </div>
+      <div
+        style={{
+          fontSize: 13,
+          color: "#333",
+          lineHeight: 1.6,
+          marginBottom: 10,
+        }}
+      >
+        {p.body}
+      </div>
+      {p.replies.length > 0 && (
+        <div
+          style={{
+            borderLeft: "2px solid #f0f0f0",
+            marginLeft: 6,
+            paddingLeft: 12,
+            marginBottom: 10,
+          }}
+        >
+          {p.replies.map((r) => (
+            <div key={r.id} style={{ marginBottom: 8 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "#555",
+                  marginBottom: 1,
+                }}
+              >
+                {r.author}
+              </div>
+              <div style={{ fontSize: 12, color: "#444", lineHeight: 1.55 }}>
+                {r.text}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button
+          onClick={handleLike}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: 12,
+            padding: "3px 10px",
+            borderRadius: 6,
+            border: `0.5px solid ${liked ? "#E24B4A" : "#ddd"}`,
+            background: liked ? "#FCEBEB" : "none",
+            cursor: liked ? "default" : "pointer",
+            color: liked ? "#A32D2D" : "#666",
+            fontFamily: "inherit",
+            transition: "all 0.15s",
+          }}
+        >
+          ❤️ {p.likes}
+        </button>
+        <button
+          onClick={() => setShowReply((v) => !v)}
+          style={{
+            fontSize: 12,
+            padding: "3px 10px",
+            borderRadius: 6,
+            border: `0.5px solid ${showReply ? "#185FA5" : "#ddd"}`,
+            background: showReply ? "#E6F1FB" : "none",
+            cursor: "pointer",
+            color: showReply ? "#185FA5" : "#666",
+            fontFamily: "inherit",
+          }}
+        >
+          💬 Reply{p.replies.length > 0 ? ` (${p.replies.length})` : ""}
+        </button>
+      </div>
+      {showReply && (
+        <div
+          style={{
+            marginTop: 10,
+            padding: "10px 12px",
+            background: "#fafafa",
+            borderRadius: 8,
+            border: "0.5px solid #eee",
+          }}
+        >
+          <input
+            type="text"
+            value={replyName}
+            onChange={(e) => setReplyName(e.target.value)}
+            placeholder="Your name (optional)"
+            style={{
+              width: "100%",
+              padding: "6px 10px",
+              fontSize: 12,
+              border: "0.5px solid #ddd",
+              borderRadius: 6,
+              fontFamily: "inherit",
+              marginBottom: 6,
+            }}
+          />
+          <textarea
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            placeholder="Write a reply…"
+            style={{
+              width: "100%",
+              padding: "6px 10px",
+              fontSize: 12,
+              border: "0.5px solid #ddd",
+              borderRadius: 6,
+              fontFamily: "inherit",
+              resize: "vertical",
+              minHeight: 64,
+              marginBottom: 6,
+            }}
+          />
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              onClick={handleSend}
+              disabled={!replyText.trim()}
+              style={{
+                padding: "5px 14px",
+                background: replyText.trim() ? "#185FA5" : "#eee",
+                color: replyText.trim() ? "#fff" : "#aaa",
+                border: "none",
+                borderRadius: 6,
+                fontSize: 12,
+                cursor: replyText.trim() ? "pointer" : "default",
+                fontFamily: "inherit",
+              }}
+            >
+              Send
+            </button>
+            <button
+              onClick={() => setShowReply(false)}
+              style={{
+                padding: "5px 10px",
+                background: "none",
+                border: "0.5px solid #ddd",
+                borderRadius: 6,
+                fontSize: 12,
+                cursor: "pointer",
+                color: "#888",
+                fontFamily: "inherit",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [predictions, setPredictions] = useState([]);
@@ -1024,9 +1324,10 @@ export default function App() {
   const [activePage, setActivePage] = useState("dashboard");
   const [matchNeed, setMatchNeed] = useState(null);
 
-  // ── Live state ──────────────────────────────────────────────────────────────
+  // ── live state ───────────────────────────────────────────────────────────
   const [userNeeds, setUserNeeds] = useState([]);
   const [userResources, setUserResources] = useState([]);
+  const [plazaPosts, setPlazaPosts] = useState(SEED_POSTS);
 
   const allNeeds = [...INITIAL_NEEDS, ...userNeeds];
   const allResources = [...INITIAL_RESOURCES, ...userResources];
@@ -1036,7 +1337,48 @@ export default function App() {
   }
 
   function addResource(resource) {
-    setUserResources((prev) => [...prev, { ...resource, id: Date.now() }]);
+    const id = Date.now();
+    setUserResources((prev) => [...prev, { ...resource, id }]);
+    setPlazaPosts((prev) => [
+      {
+        id: "u" + id,
+        initials: resource.initials,
+        color: resource.color,
+        tc: resource.textColor,
+        name: resource.name,
+        area: resource.area,
+        time: "just now",
+        tag: "New offer",
+        tagBg: resource.color,
+        tagTc: resource.textColor,
+        body:
+          resource.type +
+          (resource.availability &&
+          resource.availability !== "Ask for availability"
+            ? " — " + resource.availability
+            : ""),
+        likes: 0,
+        replies: [],
+        source: "user",
+      },
+      ...prev,
+    ]);
+  }
+
+  function likePost(id) {
+    setPlazaPosts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, likes: p.likes + 1 } : p)),
+    );
+  }
+
+  function addReply(postId, reply) {
+    setPlazaPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, replies: [...p.replies, { ...reply, id: Date.now() }] }
+          : p,
+      ),
+    );
   }
 
   const riskLevel = probToTier(predProb).tier;
@@ -1136,10 +1478,6 @@ export default function App() {
   ];
 
   const navItems = role === "resident" ? residentNav : govNav;
-
-  // derived counts for dashboard / gov
-  const openNeedsCount = allNeeds.length;
-  const unmatchedCount = userNeeds.length; // user-posted ones are always "unmatched" initially
 
   return (
     <div
@@ -1682,8 +2020,6 @@ export default function App() {
                     risk this week
                   </div>
                 </div>
-
-                {/* live needs summary */}
                 {userNeeds.length > 0 && (
                   <div
                     style={{
@@ -1733,7 +2069,6 @@ export default function App() {
                     </button>
                   </div>
                 )}
-
                 {recentRows.length > 1 && (
                   <div
                     style={{
@@ -2045,255 +2380,52 @@ export default function App() {
           })()}
 
         {/* PLAZA */}
-        {activePage === "plaza" && (
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>
-              Community plaza
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                color: "#666",
-                marginBottom: isCritical ? 12 : 20,
-              }}
-            >
-              Share resources, ask for help, stay connected
-            </div>
-            {isCritical && (
-              <div
-                style={{
-                  background: "#FCEBEB",
-                  border: "0.5px solid #F09595",
-                  borderRadius: 8,
-                  padding: "10px 14px",
-                  fontSize: 13,
-                  color: "#A32D2D",
-                  marginBottom: 16,
-                  display: "flex",
-                  gap: 8,
-                }}
-              >
-                ▲ Outbreak risk is elevated. Check the needs board — urgent
-                requests are prioritized.
-              </div>
-            )}
-            {/* user-posted resources appear at the top */}
-            {userResources.map((r, i) => (
-              <div
-                key={r.id}
-                style={{
-                  background: "#fff",
-                  border: "0.5px solid #eee",
-                  borderRadius: 12,
-                  padding: "12px 14px",
-                  marginBottom: 10,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 8,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: "50%",
-                      background: r.color,
-                      color: r.textColor,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 12,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {r.initials}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>
-                      {r.name}
-                    </div>
-                    <div style={{ fontSize: 11, color: "#aaa" }}>
-                      just now · {r.area}
-                    </div>
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      padding: "2px 8px",
-                      borderRadius: 6,
-                      background: r.color,
-                      color: r.textColor,
-                    }}
-                  >
-                    New offer
-                  </span>
+        {activePage === "plaza" &&
+          (() => {
+            const sorted = [...plazaPosts].sort((a, b) => b.likes - a.likes);
+            return (
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>
+                  Community plaza
                 </div>
                 <div
                   style={{
                     fontSize: 13,
-                    color: "#333",
-                    lineHeight: 1.6,
-                    marginBottom: 8,
-                  }}
-                >
-                  {r.type}
-                  {r.availability && r.availability !== "Ask for availability"
-                    ? ` — ${r.availability}`
-                    : ""}
-                </div>
-                <button
-                  style={{
-                    fontSize: 12,
-                    padding: "3px 10px",
-                    borderRadius: 6,
-                    border: "0.5px solid #ddd",
-                    background: "none",
-                    cursor: "pointer",
                     color: "#666",
-                    fontFamily: "inherit",
+                    marginBottom: isCritical ? 12 : 20,
                   }}
                 >
-                  Reply
-                </button>
-              </div>
-            ))}
-            {[
-              {
-                initials: "BW",
-                color: "#E1F5EE",
-                tc: "#0F6E56",
-                name: "Budi Winarso",
-                area: "RT 04",
-                time: "2h ago",
-                tag: "Has car",
-                tagBg: "#EAF3DE",
-                tagTc: "#3B6D11",
-                body: "I can drive anyone who needs to get to Puskesmas this week — I have free afternoons. Especially happy to help elderly neighbors or anyone feeling unwell.",
-              },
-              {
-                initials: "SH",
-                color: "#FAEEDA",
-                tc: "#854F0B",
-                name: "Siti Handayani",
-                area: "RT 07",
-                time: "5h ago",
-                tag: "Food bank",
-                tagBg: "#FAEEDA",
-                tagTc: "#854F0B",
-                body: "Our community food bank has extra rice, noodles, and oral rehydration salts. Families can pick up Saturday 9am–12pm at RT 07 balai. No ID required.",
-              },
-              {
-                initials: "DN",
-                color: "#E6F1FB",
-                tc: "#185FA5",
-                name: "Dr. Nurul Aini",
-                area: "RT 02",
-                time: "1d ago",
-                tag: "Medical",
-                tagBg: "#E6F1FB",
-                tagTc: "#185FA5",
-                body: "I'm a nurse at RSUD. Happy to answer dengue questions here — when to go to hospital vs stay home, how to manage fever. Just reply or DM.",
-              },
-              {
-                initials: "RJ",
-                color: "#EEEDFE",
-                tc: "#3C3489",
-                name: "Ratna Juwita",
-                area: "RT 11",
-                time: "1d ago",
-                tag: "Prevention",
-                tagBg: "#EEEDFE",
-                tagTc: "#534AB7",
-                body: "Group mosquito larvicide purchase — 20 bottles for Rp 180,000 split between households. Much cheaper than buying alone. DM before Friday.",
-              },
-            ].map((p, i) => (
-              <div
-                key={i}
-                style={{
-                  background: "#fff",
-                  border: "0.5px solid #eee",
-                  borderRadius: 12,
-                  padding: "12px 14px",
-                  marginBottom: 10,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 8,
-                  }}
-                >
+                  Share resources, ask for help, stay connected · sorted by ❤️
+                </div>
+                {isCritical && (
                   <div
                     style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: "50%",
-                      background: p.color,
-                      color: p.tc,
+                      background: "#FCEBEB",
+                      border: "0.5px solid #F09595",
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                      fontSize: 13,
+                      color: "#A32D2D",
+                      marginBottom: 16,
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 12,
-                      fontWeight: 500,
+                      gap: 8,
                     }}
                   >
-                    {p.initials}
+                    ▲ Outbreak risk is elevated. Check the needs board — urgent
+                    requests are prioritized.
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>
-                      {p.name}
-                    </div>
-                    <div style={{ fontSize: 11, color: "#aaa" }}>
-                      {p.time} · {p.area}
-                    </div>
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      padding: "2px 8px",
-                      borderRadius: 6,
-                      background: p.tagBg,
-                      color: p.tagTc,
-                    }}
-                  >
-                    {p.tag}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: "#333",
-                    lineHeight: 1.6,
-                    marginBottom: 8,
-                  }}
-                >
-                  {p.body}
-                </div>
-                <button
-                  style={{
-                    fontSize: 12,
-                    padding: "3px 10px",
-                    borderRadius: 6,
-                    border: "0.5px solid #ddd",
-                    background: "none",
-                    cursor: "pointer",
-                    color: "#666",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  Reply
-                </button>
+                )}
+                {sorted.map((p) => (
+                  <PlazaPost
+                    key={p.id}
+                    post={p}
+                    onLike={() => likePost(p.id)}
+                    onReply={(reply) => addReply(p.id, reply)}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            );
+          })()}
 
         {/* NEEDS BOARD */}
         {activePage === "needs" && (
