@@ -16,6 +16,21 @@ An end-to-end system that detects dengue outbreak risk from climate data, transl
 
 ---
 
+## The Problem
+
+Most disease early warning systems stop at the alert. They tell you *that* something is coming. They don't tell you **what to do about it, who should do it, with what budget**, or where to go when it actually arrives.
+
+More importantly, they treat the response as a government problem. In practice, communities have resources — cars, food, medical knowledge, spare time — that official programs can't mobilize fast enough. The gap between what government can deploy and what a sick family actually needs is often filled by **neighbors, not agencies**.
+
+| Layer | What it does |
+|-------|-------------|
+| 🔍 **Detection** | Calibrated outbreak probability from climate + epidemiological data |
+| 💰 **Allocation** | Budget-constrained action plans (0/1 knapsack) for government and individuals |
+| 🤝 **Matching** | Community resource board connecting those who have with those who need |
+| 📱 **Guidance** | Risk-adaptive interface that changes behaviour based on outbreak severity |
+
+---
+
 ## Results
 
 <table>
@@ -59,70 +74,30 @@ An end-to-end system that detects dengue outbreak risk from climate data, transl
 | ROC AUC | **0.814** | 0.515 | 0.680 |
 | PR AUC | **0.474** | 0.169 | 0.301 |
 
-Threshold 0.0888 is F2-optimised — missing an outbreak is costlier than a false alarm. LightGBM exceeds the persistence baseline (predict next week = this week) by **+13 AUC points**, meaning climate and lag features together add meaningful signal beyond serial continuity alone.
+Threshold 0.0888 is F2-optimised — missing an outbreak is costlier than a false alarm. LightGBM exceeds the persistence baseline by **+13 AUC points**, meaning climate and lag features add meaningful signal beyond serial continuity alone.
 
 ### Key modelling findings
 
 | Finding | Impact |
 |---------|--------|
-| Temperature was proxying geography | Adding `adm_0_encoded` dropped temp to 6th place, ROC AUC 0.667 → 0.711 |
+| Temperature was proxying geography | Adding `adm_0_encoded` dropped temp to 6th place · ROC AUC 0.667 → 0.711 |
 | Early stopping metric: logloss → AUC | Training extended 5 → 55 iterations |
-| Adding 4 epidemiological lag features | ROC AUC +10%, PR AUC +80% |
+| Adding 4 epidemiological lag features | ROC AUC +10% · PR AUC +80% |
 | Platt calibration over isotonic regression | Resolved probability plateau on test set |
-
----
-
-## The Problem
-
-Most disease early warning systems stop at the alert. They tell you *that* something is coming. They don't tell you **what to do about it, who should do it, with what budget**, or where to go when it actually arrives.
-
-More importantly, they treat the response as a government problem. In practice, communities have resources — cars, food, medical knowledge, spare time — that official programs can't mobilize fast enough. The gap between what government can deploy and what a sick family actually needs is often filled by **neighbors, not agencies**.
-
-This system addresses both problems across four layers:
-
-| Layer | What it does |
-|-------|-------------|
-| 🔍 **Detection** | Calibrated outbreak probability from climate + epidemiological data |
-| 💰 **Allocation** | Budget-constrained action plans (0/1 knapsack) for government and individuals |
-| 🤝 **Matching** | Community resource board connecting those who have with those who need |
-| 📱 **Guidance** | Risk-adaptive interface that changes behaviour based on outbreak severity |
 
 ---
 
 ## Architecture
 
 ```mermaid
-flowchart TD
-    A["🛰️ NASA POWER API\ndaily climate tiles"] --> C
-    B["📊 OpenDengue V1.3\nprovince/month cases"] --> C
-
-    C["🟫 Bronze Layer\nraw ingestion · 2.34M+ records"]
-    C --> D
-
-    D["🥈 Silver Layer\nweekly aggregates · province mapping"]
-    D --> E
-
-    E["🥇 Gold Layer\nVSI · lag features · training dataset\n19,158 rows · 7 countries"]
-    E --> F
-
-    F["⚡ LightGBM + Platt Calibration\nROC AUC 0.814 · F2 0.608\nthreshold 0.0888"]
-    F --> G
-
-    G["🎲 Monte Carlo\n1,000 simulations\nrelative risk + 95% CI"]
-    G --> H
-
-    H["🧠 Decision Layer"]
-    H --> I["🏛️ Gov allocation\n0/1 knapsack\nrisk-adaptive budget"]
-    H --> J["👤 Personal plan\nknapsack\naction steps"]
-    H --> K["🗺️ Resource retrieval\nFAISS RAG\nlocal clinics + NGOs"]
-
-    I --> L["⚡ FastAPI\nGroq llama-3.3-70b"]
-    J --> L
-    K --> L
-
-    L --> M["⚛️ React Frontend"]
-    M --> N["🏠 Resident view\nrisk dashboard · plaza · needs board"]
-    M --> O["🏛️ Government view\ndistrict overview · budget · gaps"]
+flowchart LR
+    A["🛰️ NASA POWER\nclimate tiles"] --> C
+    B["📊 OpenDengue\ncase counts"] --> C
+    C["Medallion Pipeline\nBronze → Silver → Gold"] --> D
+    D["⚡ LightGBM\n+ Platt · AUC 0.814"] --> E
+    E["🎲 Monte Carlo\n1k simulations"] --> F
+    F["🧠 Decision Layer\nknapsack · FAISS RAG"] --> G
+    G["FastAPI + Groq"] --> H["⚛️ React\nResident · Gov"]
 ```
 
 ---
