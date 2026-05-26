@@ -132,7 +132,7 @@ flowchart LR
 Climate data is ingested via async tile-based API calls across **170 tiles (5°×5°)** covering Southeast Asia and South America at 1° grid resolution — ~4,250 coordinate points, three daily parameters (T2M, PRECTOTCORR, RH2M), 2017–2024, with checkpoint-based retry logic.
 
 ```
-Bronze  →  raw daily records (2.34M+ rows, no transforms)
+Bronze  →  raw daily records (7.11M+ rows, no transforms)
 Silver  →  weekly aggregates · temp stats · precipitation · humidity · seasonal encoding (sin/cos)
 Gold    →  VSI · lag features (1–3 weeks) · rolling case counts · joined with dengue labels
 ```
