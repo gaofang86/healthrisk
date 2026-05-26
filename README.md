@@ -5,6 +5,7 @@
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black"/>
   <img src="https://img.shields.io/badge/LightGBM-ROC_AUC_0.814-brightgreen?style=flat-square"/>
   <img src="https://img.shields.io/badge/FastAPI-Groq_llama--3.3--70b-009688?style=flat-square&logo=fastapi&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Docker-containerised-2496ED?style=flat-square&logo=docker&logoColor=white"/>
   <img src="https://img.shields.io/badge/Deployed-Vercel_+_Render-black?style=flat-square&logo=vercel"/>
 </p>
 
@@ -30,18 +31,22 @@ More importantly, they treat the response as a government problem. In practice, 
 | 📱 **Guidance** | Risk-adaptive interface that changes behaviour based on outbreak severity |
 
 ### Interface
+
 <p align="center">
   <img src="docs/1.png" width="48%"/>
   <img src="docs/2.png" width="48%"/>
 </p>
+
 <p align="center">
   <img src="docs/3.png" width="48%"/>
   <img src="docs/4.png" width="48%"/>
 </p>
+
 <p align="center">
   <img src="docs/5.png" width="48%"/>
   <img src="docs/6.png" width="48%"/>
 </p>
+
 <p align="center">
   <img src="docs/7.png" width="48%"/>
   <img src="docs/8.png" width="48%"/>
@@ -209,18 +214,22 @@ Countries: Colombia, Peru, Bolivia, Indonesia, Panama, Ecuador, Argentina.
 
 ```
 healthrisk/
-├── backend/                      # FastAPI · /api/risk · /api/match · /api/ask
+├── backend/
+│   ├── Dockerfile                    # Docker image for backend
+│   ├── main.py
+│   └── requirements.txt
 ├── frontend/
-│   ├── src/App.jsx               # Full single-page React app
-│   └── public/test_predictions.csv   # Real LightGBM test-set outputs (2022–2024)
+│   ├── src/App.jsx                   # Full single-page React app
+│   └── public/test_predictions.csv  # Real LightGBM test-set outputs (2022–2024)
 ├── healthrisk/
-│   ├── models/                   # lgbm_model.pkl · platt_calibrator.pkl
-│   ├── notebook/                 # 00_setup → 05_monte_carlo_policy
+│   ├── models/                       # lgbm_model.pkl · platt_calibrator.pkl
+│   ├── notebook/                     # 00_setup → 05_monte_carlo_policy
 │   └── src/
-│       ├── ingestion/            # climate_ingestion.py · dengue_ingestion.py
-│       ├── features/             # feature_engineering.py · preprocess.py
-│       ├── training/             # model.py · training.py
-│       └── Decision/             # monte_carlo.py · knapsack.py · resource_discovery.py
+│       ├── ingestion/                # climate_ingestion.py · dengue_ingestion.py
+│       ├── features/                 # feature_engineering.py · preprocess.py
+│       ├── training/                 # model.py · training.py
+│       └── Decision/                 # monte_carlo.py · knapsack.py · resource_discovery.py
+├── docker-compose.yml                # Multi-service local orchestration
 └── render.yaml
 ```
 
@@ -228,12 +237,27 @@ healthrisk/
 
 ## Local Development
 
-**Backend**
+**Backend (standard)**
 ```bash
 cd backend && python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env          # add GROQ_API_KEY (free at console.groq.com)
 uvicorn main:app --reload     # → http://localhost:8000
+```
+
+**Backend (Docker)**
+```bash
+cd backend
+docker build -t healthrisk-api .
+docker run -p 8000:8000 --env-file .env \
+  -v /path/to/healthrisk/models:/healthrisk/models \
+  healthrisk-api
+# → http://localhost:8000/docs
+```
+
+**Full stack (Docker Compose)**
+```bash
+docker-compose up --build
 ```
 
 **Frontend**
